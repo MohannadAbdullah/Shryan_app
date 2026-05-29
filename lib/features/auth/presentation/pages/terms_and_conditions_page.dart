@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../../core/constants/global_constants.dart';
-import '../../../../core/common_widgets/custom_button.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:sharyan/core/theme/app_theme.dart';
+import 'package:sharyan/core/constants/global_constants.dart';
 
 class TermsAndConditionsPage extends StatefulWidget {
   const TermsAndConditionsPage({super.key});

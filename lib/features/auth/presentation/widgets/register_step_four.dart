@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:sharyan/core/theme/app_theme.dart';
 import 'term_card.dart';
 
 class RegisterStepFour extends StatelessWidget {
@@ -14,7 +14,7 @@ class RegisterStepFour extends StatelessWidget {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withOpacity(0.1),
+            color: AppTheme.primaryColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: const Icon(

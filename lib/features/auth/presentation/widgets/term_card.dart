@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
 
 class TermCard extends StatelessWidget {
   final String title;
@@ -21,9 +20,9 @@ class TermCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.1)),
       ),
       child: Stack(
         children: [
@@ -34,9 +33,9 @@ class TermCard extends StatelessWidget {
               right: 0,
               child: Container(
                 width: 4,
-                decoration: const BoxDecoration(
-                  color: AppTheme.primaryColor,
-                  borderRadius: BorderRadius.horizontal(right: Radius.circular(12)),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor,
+                  borderRadius: const BorderRadius.horizontal(right: Radius.circular(12)),
                 ),
               ),
             ),
@@ -51,10 +50,10 @@ class TermCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
                   ],

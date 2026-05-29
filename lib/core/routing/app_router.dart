@@ -1,39 +1,39 @@
-import 'package:go_router/go_router.dart';
+﻿import 'package:go_router/go_router.dart';
 
 // Auth
-import '../../features/auth/presentation/pages/splash_screen.dart';
-import '../../features/auth/presentation/pages/onboarding_page.dart';
-import '../../features/auth/presentation/pages/login_page.dart';
-import '../../features/auth/presentation/pages/register_page.dart';
+import 'package:sharyan/features/auth/presentation/pages/splash_screen.dart';
+import 'package:sharyan/features/auth/presentation/pages/onboarding_page.dart';
+import 'package:sharyan/features/auth/presentation/pages/login_page.dart';
+import 'package:sharyan/features/auth/presentation/pages/register_page.dart';
 
 // Home
-import '../../features/home/presentation/pages/home_page.dart';
-import '../../features/home/presentation/pages/top_donors_page.dart';
+import 'package:sharyan/features/home/presentation/pages/home_page.dart';
+import 'package:sharyan/features/gamification/presentation/pages/top_donors_page.dart';
 
 // Search
-import '../../features/search/presentation/pages/search_directory_page.dart';
+import 'package:sharyan/features/search/presentation/pages/search_directory_page.dart';
 
 // Profile
-import '../../features/profile/presentation/pages/profile_page.dart';
-import '../../features/profile/presentation/pages/edit_profile_page.dart';
+import 'package:sharyan/features/donor_profile/presentation/pages/profile_page.dart';
+import 'package:sharyan/features/donor_profile/presentation/pages/edit_profile_page.dart';
 
 // History
-import '../../features/history/presentation/pages/donation_history_page.dart';
+import 'package:sharyan/features/history/presentation/pages/donation_history_page.dart';
 
 // Notifications
-import '../../features/notifications/presentation/pages/urgent_requests_page.dart';
+import 'package:sharyan/features/blood_emergencies/presentation/pages/urgent_requests_page.dart';
 
 // Hospital
-import '../../features/hospital/presentation/pages/hospital_dashboard_page.dart';
-import '../../features/hospital/presentation/pages/create_request_page.dart';
-import '../../features/hospital/presentation/pages/responders_list_page.dart';
+import 'package:sharyan/features/hospital/presentation/pages/hospital_dashboard_page.dart';
+import 'package:sharyan/features/hospital/presentation/pages/create_request_page.dart';
+import 'package:sharyan/features/hospital/presentation/pages/responders_list_page.dart';
 
 // More
-import '../../features/more/presentation/pages/settings_page.dart';
-import '../../features/more/presentation/pages/report_issue_page.dart';
-import '../../features/more/presentation/pages/about_app_page.dart';
-import '../../features/more/presentation/pages/contact_us_page.dart';
-import '../../features/more/presentation/pages/invite_friend_page.dart';
+import 'package:sharyan/features/more/presentation/pages/settings_page.dart';
+import 'package:sharyan/features/more/presentation/pages/report_issue_page.dart';
+import 'package:sharyan/features/more/presentation/pages/about_app_page.dart';
+import 'package:sharyan/features/more/presentation/pages/contact_us_page.dart';
+import 'package:sharyan/features/more/presentation/pages/invite_friend_page.dart';
 
 class AppRouter {
   static final router = GoRouter(

@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import '../../../../core/constants/global_constants.dart';
-import '../../../../core/theme/app_theme.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:sharyan/core/constants/global_constants.dart';
+import 'package:sharyan/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
 
@@ -62,7 +62,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppTheme.primaryColor.withOpacity(1 - _controller.value),
+                            color: AppTheme.primaryColor.withValues(alpha: 1 - _controller.value),
                             width: 1,
                           ),
                         ),
@@ -80,7 +80,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppTheme.primaryColor.withOpacity(1 - offsetValue),
+                            color: AppTheme.primaryColor.withValues(alpha: 1 - offsetValue),
                             width: 1,
                           ),
                         ),

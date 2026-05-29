@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../../core/common_widgets/custom_button.dart';
+import 'package:sharyan/shared/widgets/custom_button.dart';
 import 'package:go_router/go_router.dart';
-import 'login_page.dart';
 class OnboardingContent {
   final String imagePath;
   final String title;
@@ -34,19 +32,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   final List<OnboardingContent> _contents = [
     OnboardingContent(
-      imagePath: 'assets/images/onboarding_hero.png',
+      imagePath: 'assets/images/1.png',
       title: 'مرحباً بك في شريان',
       subtitle: 'أسهل وأسرع طريقة لإنقاذ الأرواح. انضم إلى الآلاف من المتبرعين بالدم في منطقتك وكن جاهزاً لتلبية النداء.',
       buttonText: 'التالي',
     ),
     OnboardingContent(
-      imagePath: 'assets/images/onboarding_save_lives.jpg',
+      imagePath: 'assets/images/2.png',
       title: 'شارك في إنقاذ الأرواح',
       subtitle: 'تبرعك بالدم هو هدية الحياة للمحتاجين. انضم إلى مجتمعنا وكن سبباً في ابتسامة عائلة.',
       buttonText: 'التالي',
     ),
     OnboardingContent(
-      imagePath: 'assets/images/onboarding_hero.png',
+      imagePath: 'assets/images/3.png',
       title: 'كن سببًا في إنقاذ حياة',
       subtitle: 'بقطرة دم واحدة، يمكنك أن تمنح الأمل وتنقذ حياة\nشخص محتاج. انضم إلى مجتمعنا من المتبرعين\nاليوم وكن بطلًا في مدينتك.',
       buttonText: 'ابدأ الآن',
@@ -90,12 +88,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 alignment: AlignmentDirectional.topEnd,
                 child: TextButton(
                   onPressed: _skip,
-                  child: const Text(
+                  child: Text(
                     'تخطي',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.6) ?? Colors.grey,
                     ),
                   ),
                 ),
@@ -128,14 +126,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
                               Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(24),
-                                  color: Colors.white,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.grey.withValues(alpha: 0.1),
-                                      blurRadius: 20,
-                                      spreadRadius: 5,
-                                    ),
-                                  ],
+                                  color: Theme.of(context).colorScheme.surface,
+                                  // boxShadow: [
+                                  //   BoxShadow(
+                                  //     color: Colors.black.withValues(alpha: 0.05),
+                                  //     blurRadius: 20,
+                                  //     spreadRadius: 5,
+                                  //   ),
+                                  // ],
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(24),
@@ -147,8 +145,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                     errorBuilder: (context, error, stackTrace) => Container(
                                       width: 280,
                                       height: 280,
-                                      color: Colors.teal.shade900,
-                                      child: const Icon(Icons.image, color: Colors.white54, size: 50),
+                                      color: Theme.of(context).colorScheme.surface,
+                                      child: Icon(Icons.image, color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.5), size: 50),
                                     ),
                                   ),
                                 ),
@@ -160,10 +158,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                   right: -10,
                                   child: Container(
                                     padding: const EdgeInsets.all(8),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.surface,
                                       shape: BoxShape.circle,
-                                      boxShadow: [
+                                      boxShadow: const [
                                         BoxShadow(
                                           color: Colors.black12,
                                           blurRadius: 10,
@@ -171,9 +169,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                         ),
                                       ],
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.favorite,
-                                      color: Colors.redAccent,
+                                      color: Theme.of(context).primaryColor,
                                       size: 20,
                                     ),
                                   ),
@@ -184,10 +182,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                   left: -10,
                                   child: Container(
                                     padding: const EdgeInsets.all(8),
-                                    decoration: const BoxDecoration(
-                                      color: Colors.white,
+                                    decoration: BoxDecoration(
+                                      color: Theme.of(context).colorScheme.surface,
                                       shape: BoxShape.circle,
-                                      boxShadow: [
+                                      boxShadow: const [
                                         BoxShadow(
                                           color: Colors.black12,
                                           blurRadius: 10,
@@ -195,9 +193,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                                         ),
                                       ],
                                     ),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.monitor_heart,
-                                      color: Colors.grey,
+                                      color: Theme.of(context).iconTheme.color?.withValues(alpha: 0.6) ?? Colors.grey,
                                       size: 20,
                                     ),
                                   ),
@@ -216,7 +214,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: content.isTitlePrimary ? AppTheme.primaryColor : Colors.black87,
+                            color: content.isTitlePrimary ? Theme.of(context).primaryColor : Theme.of(context).textTheme.titleLarge?.color,
                           ),
                         ),
                         
@@ -226,10 +224,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         Text(
                           content.subtitle,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             height: 1.5,
-                            color: Colors.grey,
+                            color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey,
                           ),
                         ),
                       ],
@@ -247,7 +245,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   _contents.length,
                   (index) => Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4.0),
-                    child: _buildIndicator(isActive: index == _currentIndex),
+                    child: _buildIndicator(context, isActive: index == _currentIndex),
                   ),
                 ),
               ),
@@ -270,13 +268,13 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  Widget _buildIndicator({required bool isActive}) {
+  Widget _buildIndicator(BuildContext context, {required bool isActive}) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       width: isActive ? 24 : 8,
       height: 8,
       decoration: BoxDecoration(
-        color: isActive ? AppTheme.primaryColor : Colors.grey.shade300,
+        color: isActive ? Theme.of(context).primaryColor : Theme.of(context).dividerColor,
         borderRadius: BorderRadius.circular(4),
       ),
     );

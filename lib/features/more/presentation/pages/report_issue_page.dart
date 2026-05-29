@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../../core/common_widgets/custom_button.dart';
-import '../../../../core/common_widgets/custom_dropdown_field.dart';
+import 'package:sharyan/shared/widgets/custom_button.dart';
+import 'package:sharyan/shared/widgets/custom_dropdown_field.dart';
 
 class ReportIssuePage extends StatelessWidget {
   const ReportIssuePage({super.key});
@@ -9,44 +8,35 @@ class ReportIssuePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: false,
-        iconTheme: const IconThemeData(color: AppTheme.primaryColor),
-        title: const Text('شريان', style: TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold)),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: CircleAvatar(
-              backgroundImage: const NetworkImage('https://i.pravatar.cc/150'),
-              radius: 16,
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
+        iconTheme: IconThemeData(color: Theme.of(context).primaryColor),
+        title: Text('شريان', style: TextStyle(color: Theme.of(context).primaryColor, fontWeight: FontWeight.bold)),
+        
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('إرسال بلاغ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87)),
+            Text('إرسال بلاغ', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.titleLarge?.color)),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'نحن هنا لنسمعك. يرجى تزويدنا بتفاصيل المشكلة لنتمكن من مساعدتك بأفضل شكل ممكن.',
-              style: TextStyle(color: Colors.grey, fontSize: 14, height: 1.5),
+              style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.grey, fontSize: 14, height: 1.5),
             ),
             const SizedBox(height: 32),
 
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24)),
+              decoration: BoxDecoration(color: Theme.of(context).colorScheme.surface, borderRadius: BorderRadius.circular(24)),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('نوع البلاغ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text('نوع البلاغ', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).textTheme.bodyLarge?.color)),
                   const SizedBox(height: 8),
                   CustomDropdownField<String>(
                     hintText: 'اختر نوع البلاغ',
@@ -54,15 +44,15 @@ class ReportIssuePage extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
 
-                  const Text('تفاصيل المشكلة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text('تفاصيل المشكلة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Theme.of(context).textTheme.bodyLarge?.color)),
                   const SizedBox(height: 8),
                   TextFormField(
                     maxLines: 5,
                     decoration: InputDecoration(
                       hintText: 'يرجى وصف المشكلة التي تواجهها بالتفصيل...',
-                      hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+                      hintStyle: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color ?? Colors.grey, fontSize: 14),
                       filled: true,
-                      fillColor: Colors.grey.shade50,
+                      fillColor: Theme.of(context).scaffoldBackgroundColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -74,20 +64,20 @@ class ReportIssuePage extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.05),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: AppTheme.primaryColor.withOpacity(0.2)),
+                      border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.2)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.security, color: AppTheme.primaryColor),
+                        Icon(Icons.security, color: Theme.of(context).primaryColor),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: const [
-                              Text('نظام آمن', style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.primaryColor, fontSize: 12)),
-                              Text('يتم التعامل مع بلاغك بسرية تامة من قبل فريقنا المختص.', style: TextStyle(color: AppTheme.primaryColor, fontSize: 10)),
+                            children: [
+                              Text('نظام آمن', style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface, fontSize: 12)),
+                              Text('يتم التعامل مع بلاغك بسرية تامة من قبل فريقنا المختص.', style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 10)),
                             ],
                           ),
                         ),

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "230391060889",
+    "project_id": "sharyan-99352",
+    "storage_bucket": "sharyan-99352.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:230391060889:android:6a5ca4b3109d8629025b08",
+        "android_client_info": {
+          "package_name": "com.example.sharyan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB_tpvXUeGlBuKWt5tE7R4D6GdvW-JjtIs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

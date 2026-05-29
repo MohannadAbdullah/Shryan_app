@@ -1,101 +1,216 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sharyan/core/common_widgets/custom_button.dart';
-import '../../../../core/theme/app_theme.dart';
-import '../../../../core/constants/global_constants.dart';
-import '../../../home/presentation/pages/home_page.dart';
-import '../manager/auth_provider.dart';
+import 'package:sharyan/shared/widgets/custom_button.dart';
+import 'package:sharyan/core/theme/app_theme.dart';
+import 'package:sharyan/core/constants/global_constants.dart';
+import 'package:sharyan/features/auth/presentation/providers/auth_provider.dart';
 import 'package:go_router/go_router.dart';
-import 'login_page.dart';
 import '../widgets/register_steps.dart';
 import '../widgets/register_step_four.dart';
 
-class RegisterPage extends ConsumerWidget {
+class RegisterPage extends ConsumerStatefulWidget {
   const RegisterPage({super.key});
-  
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends ConsumerState<RegisterPage> {
+  // Form keys per step
+  final _formKey1 = GlobalKey<FormState>();
+  final _formKey2 = GlobalKey<FormState>();
+  final _formKey3 = GlobalKey<FormState>();
+
+  // Step 1 controllers
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  // Step 2 controllers & state
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _ageController = TextEditingController();
+  String? _selectedBloodType;
+  String? _selectedGender;
+
+  // Step 3 state
+  String? _selectedCity;
+  String? _selectedArea;
+  String? _selectedLastDonationDate;
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    _nameController.dispose();
+    _phoneController.dispose();
+    _ageController.dispose();
+    super.dispose();
+  }
+
+  // ── حفظ بيانات الخطوة الحالية ثم الانتقال للتالية ───────────────────────
+  void _handleNext(AuthState authState) {
+    final notifier = ref.read(authProvider.notifier);
+
+    switch (authState.currentRegistrationStep) {
+      case 1:
+        if (!(_formKey1.currentState?.validate() ?? false)) return;
+        notifier.saveStep1(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+        notifier.nextStep();
+        break;
+      case 2:
+        if (!(_formKey2.currentState?.validate() ?? false)) return;
+        notifier.saveStep2(
+          name: _nameController.text.trim(),
+          phone: _phoneController.text.trim(),
+          bloodType: _selectedBloodType ?? '',
+          gender: _selectedGender ?? '',
+          age: int.tryParse(_ageController.text.trim()) ?? 0,
+        );
+        notifier.nextStep();
+        break;
+      case 3:
+        if (!(_formKey3.currentState?.validate() ?? false)) return;
+        notifier.saveStep3(
+          city: _selectedCity ?? '',
+          area: _selectedArea ?? '',
+          lastDonationDate: _selectedLastDonationDate,
+        );
+        notifier.nextStep();
+        break;
+    }
+  }
+
+  // ── إرسال البيانات لـ Firebase ───────────────────────────────────────────
+  Future<void> _handleCompleteRegistration() async {
+    final errorMsg =
+        await ref.read(authProvider.notifier).completeRegistration();
+    if (!mounted) return;
+    if (errorMsg == null) {
+      context.go('/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(errorMsg),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-    final authNotifier = ref.read(authProvider.notifier);
-    
+
+    // عرض رسالة الخطأ عند أي فشل غير متوقع لم يُعالَج مباشرةً
+    ref.listen(authProvider, (previous, next) {
+      if (next.errorMessage != null &&
+          next.errorMessage != previous?.errorMessage) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.errorMessage!),
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    });
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+          padding:
+              const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
           child: Column(
             children: [
-              if (authState.currentRegistrationStep >= 3)
+              if (authState.currentRegistrationStep >= 1)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 24.0),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      authState.currentRegistrationStep == 4
-                        ? const Icon(Icons.notifications_none, color: AppTheme.primaryColor)
-                        : const SizedBox(width: 24), // Balance
-                      const Text(
+                      Text(
                         GlobalConstants.appName,
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.primaryColor,
+                          color: Theme.of(context).primaryColor,
                         ),
                       ),
-                      InkWell(
-                        onTap: () => authNotifier.previousStep(),
-                        child: const Icon(Icons.arrow_forward, color: Colors.black87),
-                      ),
+                      
                     ],
                   ),
                 ),
-            Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 20,
-                  spreadRadius: 5,
+              Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
                 ),
-              ],
-              ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(24),
                   child: Stack(
                     children: [
                       // Background subtle curve
-                      if (authState.currentRegistrationStep == 1 || authState.currentRegistrationStep == 3)
+                      if (authState.currentRegistrationStep == 1 ||
+                          authState.currentRegistrationStep == 3)
                         Positioned(
-                          top: authState.currentRegistrationStep == 3 ? -100 : -50,
-                          left: authState.currentRegistrationStep == 3 ? -100 : null,
-                          right: authState.currentRegistrationStep == 1 ? -50 : null,
+                          top: authState.currentRegistrationStep == 3
+                              ? -100
+                              : -50,
+                          right: authState.currentRegistrationStep == 3
+                              ? -100
+                              : null,
+                          left: authState.currentRegistrationStep == 1
+                              ? -50
+                              : -100,
                           child: Container(
-                            width: authState.currentRegistrationStep == 3 ? 300 : 200,
-                            height: authState.currentRegistrationStep == 3 ? 300 : 200,
+                            width:
+                                authState.currentRegistrationStep == 3 ? 300 : 200,
+                            height:
+                                authState.currentRegistrationStep == 3 ? 300 : 200,
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryColor.withOpacity(0.05),
+                              color: Theme.of(context)
+                                  .primaryColor
+                                  .withValues(alpha: 0.05),
                               shape: BoxShape.circle,
                             ),
                           ),
                         ),
-                  
+
                       Padding(
                         padding: const EdgeInsets.all(24.0),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             // Header
-                            _buildHeader(context, authState, authNotifier),
-                            
+                            _buildHeader(context, authState),
+
                             const SizedBox(height: 32),
-                            
+
                             // Step Content
                             _buildStepContent(authState.currentRegistrationStep),
 
                             const SizedBox(height: 32),
 
+                            // Checkbox الشروط (الخطوة الرابعة)
                             if (authState.currentRegistrationStep == 4) ...[
                               const SizedBox(height: 24),
                               Row(
@@ -108,7 +223,9 @@ class RegisterPage extends ConsumerWidget {
                                       value: authState.isTermsAccepted,
                                       activeColor: AppTheme.primaryColor,
                                       onChanged: (val) {
-                                        authNotifier.setTermsAccepted(val ?? false);
+                                        ref
+                                            .read(authProvider.notifier)
+                                            .setTermsAccepted(val ?? false);
                                       },
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(4),
@@ -118,16 +235,22 @@ class RegisterPage extends ConsumerWidget {
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
+                                         Text(
                                           'أقر وأوافق على الشروط',
-                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                              color: Theme.of(context).textTheme.bodyLarge?.color),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           'أفهم أن التطبيق هو وسيط تواصل وأخلي مسؤوليته التامة من أي تبعات طبية.',
-                                          style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                          style: TextStyle(
+                                              fontSize: 11,
+                                              color: Colors.grey.shade600),
                                         ),
                                       ],
                                     ),
@@ -137,33 +260,34 @@ class RegisterPage extends ConsumerWidget {
                               const SizedBox(height: 24),
                             ],
 
-                            // Continue Button
+                            // زر المتابعة
                             CustomButton(
                               text: authState.currentRegistrationStep == 4
-                                  ? 'متابعة التسجيل'
+                                  ? 'إنشاء الحساب'
                                   : (authState.currentRegistrationStep == 3
                                       ? 'إكمال التسجيل'
                                       : 'متابعة'),
-                              icon: authState.currentRegistrationStep == 3
+                              icon: authState.currentRegistrationStep == 4
                                   ? Icons.check_circle_outline
-                                  : Icons.arrow_back,
-                              onPressed: (authState.currentRegistrationStep == 4 && !authState.isTermsAccepted)
+                                  : (authState.currentRegistrationStep == 3
+                                      ? Icons.check_circle_outline
+                                      : Icons.arrow_forward),
+                              isLoading: authState.isLoading,
+                              onPressed: (authState.currentRegistrationStep ==
+                                              4 &&
+                                          !authState.isTermsAccepted) ||
+                                      authState.isLoading
                                   ? null
-                                  : () async {
-                                      if (authState.currentRegistrationStep == 4) {
-                                        await authNotifier.completeRegistration();
-                                        if (context.mounted) {
-                                          context.go('/home');
-                                        }
+                                  : () {
+                                      if (authState.currentRegistrationStep ==
+                                          4) {
+                                        _handleCompleteRegistration();
                                       } else {
-                                        authNotifier.nextStep();
+                                        _handleNext(authState);
                                       }
                                     },
                             ),
-                            
-                             
-                            ],
-
+                          ],
                         ),
                       ),
                     ],
@@ -177,48 +301,69 @@ class RegisterPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildHeader(BuildContext context, AuthState authState, AuthNotifier authNotifier) {
+  Widget _buildHeader(BuildContext context, AuthState authState) {
     if (authState.currentRegistrationStep == 4) {
-      return const SizedBox.shrink();
+      return Row(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(width: 12),
+              InkWell(
+                onTap: () =>
+                    ref.read(authProvider.notifier).previousStep(),
+                child: Icon(Icons.arrow_back,
+                    size: 24, color: Theme.of(context).iconTheme.color),
+              ),
+            const SizedBox.shrink(),
+        ],
+          ),
+        ]   
+        );
     }
-
     if (authState.currentRegistrationStep == 2) {
       return Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(width: 32), // Balance the icon
+              const SizedBox(width: 12),
+              InkWell(
+                onTap: () =>
+                    ref.read(authProvider.notifier).previousStep(),
+                child: Icon(Icons.arrow_back,
+                    size: 24, color: Theme.of(context).iconTheme.color),
+              ),
+              const SizedBox(width: 30),
               Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
                     'الخطوة ${authState.currentRegistrationStep} من ٣',
-                    style: const TextStyle(
-                      color: AppTheme.primaryColor,
+                    style: TextStyle(
+                      color: Theme.of(context).primaryColor,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'المعلومات الشخصية',
                     style: TextStyle(
-                      color: Colors.black87,
+                      color: Theme.of(context).textTheme.titleLarge?.color,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ],
               ),
-              InkWell(
-                onTap: () => authNotifier.previousStep(),
-                child: const Icon(Icons.arrow_forward, size: 24, color: Colors.black87),
-              ),
             ],
           ),
           const SizedBox(height: 16),
-          _buildProgressBar(authState.currentRegistrationStep),
+          _buildProgressBar(context, authState.currentRegistrationStep),
         ],
       );
     }
@@ -226,78 +371,85 @@ class RegisterPage extends ConsumerWidget {
     if (authState.currentRegistrationStep == 3) {
       return Column(
         children: [
-          const Text(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const SizedBox(width: 12),
+              InkWell(
+                onTap: () =>
+                    ref.read(authProvider.notifier).previousStep(),
+                child: Icon(Icons.arrow_back,
+                    size: 24, color: Theme.of(context).iconTheme.color),
+              ),
+              const SizedBox(width: 70),
+              Text(
             'تحديد الموقع',
             style: TextStyle(
-              color: Colors.black87,
+              color: Theme.of(context).textTheme.titleLarge?.color,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
           ),
+            ]
+          ), 
+          
           const SizedBox(height: 16),
-          _buildProgressBar(authState.currentRegistrationStep),
+          _buildProgressBar(context, authState.currentRegistrationStep),
         ],
       );
     }
 
+    // الخطوة الأولى
     return Column(
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // User Icon (Top End)
+            InkWell(
+                onTap: () =>
+                    context.go('/login'),
+                child: Icon(Icons.arrow_back,
+                    size: 24, color: Theme.of(context).iconTheme.color),
+              ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                
+                const SizedBox(height: 12),
+                Text(
+                  'الخطوة ${authState.currentRegistrationStep} من ٣',
+                  style: TextStyle(
+                    color:  Theme.of(context).primaryColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
             Column(
               children: [
                 Container(
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: AppTheme.primaryColor.withOpacity(0.1),
+                    color: Theme.of(context)
+                        .primaryColor
+                        .withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.person_add, color: AppTheme.primaryColor),
+                  child: Icon(Icons.person_add,
+                      color: Theme.of(context).primaryColor),
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                const SizedBox(width: 8),
+                Text(
                   'الحساب',
                   style: TextStyle(
-                    color: AppTheme.primaryColor,
-                    fontWeight: 
-                    FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
-            // Back Button and Step Text (Top Start)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                InkWell(
-                  onTap: () {
-                    if (authState.currentRegistrationStep > 1) {
-                      authNotifier.previousStep();
-                    } else {
-                      context.go('/login');
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: const Icon(Icons.arrow_forward, size: 20, color: Colors.black87),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'الخطوة ${authState.currentRegistrationStep} من ٣',
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
+                    color: Theme.of(context).primaryColor,
                     fontWeight: FontWeight.bold,
+                    fontSize: 12,
                   ),
                 ),
               ],
@@ -305,21 +457,23 @@ class RegisterPage extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 16),
-        _buildProgressBar(authState.currentRegistrationStep),
+        _buildProgressBar(context, authState.currentRegistrationStep),
       ],
     );
   }
 
-  Widget _buildProgressBar(int currentStep) {
+  Widget _buildProgressBar(BuildContext context, int currentStep) {
     return Row(
       children: List.generate(3, (index) {
-        bool isActive = index < currentStep;
+        final isActive = index < currentStep;
         return Expanded(
           child: Container(
             margin: EdgeInsets.only(left: index < 2 ? 4.0 : 0.0),
             height: 4,
             decoration: BoxDecoration(
-              color: isActive ? AppTheme.primaryColor : Colors.grey.shade300,
+              color: isActive
+                  ? Theme.of(context).primaryColor
+                  : Theme.of(context).dividerColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -331,11 +485,44 @@ class RegisterPage extends ConsumerWidget {
   Widget _buildStepContent(int step) {
     switch (step) {
       case 1:
-        return const RegisterStepOne();
+        return Form(
+          key: _formKey1,
+          child: RegisterStepOne(
+            emailController: _emailController,
+            passwordController: _passwordController,
+            confirmPasswordController: _confirmPasswordController,
+          ),
+        );
       case 2:
-        return const RegisterStepTwo();
+        return Form(
+          key: _formKey2,
+          child: RegisterStepTwo(
+            nameController: _nameController,
+            phoneController: _phoneController,
+            selectedBloodType: _selectedBloodType,
+            onBloodTypeChanged: (val) =>
+                setState(() => _selectedBloodType = val),
+            ageController: _ageController,
+            selectedGender: _selectedGender,
+            onGenderChanged: (val) => setState(() => _selectedGender = val),
+          ),
+        );
       case 3:
-        return const RegisterStepThree();
+        return Form(
+          key: _formKey3,
+          child: RegisterStepThree(
+            selectedCity: _selectedCity,
+            onCityChanged: (val) => setState(() {
+              _selectedCity = val;
+              _selectedArea = null; // إعادة تعيين المديرية عند تغيير المحافظة
+            }),
+            selectedArea: _selectedArea,
+            onAreaChanged: (val) => setState(() => _selectedArea = val),
+            selectedLastDonationDate: _selectedLastDonationDate,
+            onDateChanged: (val) =>
+                setState(() => _selectedLastDonationDate = val),
+          ),
+        );
       case 4:
         return const RegisterStepFour();
       default:
