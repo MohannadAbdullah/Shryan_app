@@ -27,10 +27,12 @@ final homeStatsProvider = FutureProvider<HomeStats>((ref) async {
         .count()
         .get(),
 
-    // ٢. إجمالي المتبرعين المسجلين (مستخدمو users غير المستشفيات)
+    // ٢. إجمالي المتبرعين المسجلين
+    //    نستخدم bloodType كمؤشر لأن كل متبرع يملكه، بخلاف isNotEqualTo
+    //    الذي يتجاهل الوثائق التي لا تحتوي على الحقل أصلاً.
     db
         .collection('users')
-        .where('role', isNotEqualTo: 'hospital')
+        .where('bloodType', isNotEqualTo: '')
         .count()
         .get(),
 

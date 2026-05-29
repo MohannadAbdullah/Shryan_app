@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sharyan/shared/widgets/custom_button.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 class OnboardingContent {
   final String imagePath;
   final String title;
@@ -59,19 +60,25 @@ class _OnboardingPageState extends State<OnboardingPage> {
     super.dispose();
   }
 
-  void _nextPage() {
+  Future<void> _nextPage() async {
     if (_currentIndex < _contents.length - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds:300),
         curve: Curves.easeInOut,
       );
     } else {
-      context.go('/login');
+      // Last slide — mark onboarding as seen, then navigate.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('hasSeenOnboarding', true);
+      if (mounted) context.go('/login');
     }
   }
 
-  void _skip() {
-    context.go('/login');
+  Future<void> _skip() async {
+    // Skip — mark onboarding as seen, then navigate.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasSeenOnboarding', true);
+    if (mounted) context.go('/login');
   }
 
   @override

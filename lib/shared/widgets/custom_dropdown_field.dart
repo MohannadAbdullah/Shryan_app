@@ -25,6 +25,8 @@ class CustomDropdownField<T> extends StatelessWidget {
     final safeValue = items.any((item) => item.value == value) ? value : null;
 
     return DropdownButtonFormField<T>(
+      // ValueKey يجبر إعادة بناء الـ widget عند تغيير القيمة من الخارج
+      key: ValueKey(safeValue),
       initialValue: safeValue,
       items: items,
       onChanged: onChanged,

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sharyan/shared/widgets/custom_button.dart';
 import 'package:sharyan/shared/widgets/custom_text_field.dart';
@@ -24,18 +24,80 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   late final TextEditingController _ageController;
 
   String? _selectedGender;
+  String? _selectedBloodType;
   String? _selectedCity;
   String? _selectedArea;
+
+  static const List<String> _bloodTypes = [
+    'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-',
+  ];
 
   bool _initialized = false;
 
   // ─── قوائم الاختيار ──────────────────────────────────────────────────────
-  static const List<String> _cities = [
-    'صنعاء', 'تعز', 'الحديدة', 'الضالع', 'البيضاء', 'إب', 'عدن', 'المكلا', 'ذمار',
-  ];
-  static const List<String> _areas = [
-    'بيرباشا', 'الدحي', 'المظفر', 'القاهرة', 'صالة',
-  ];
+  static const Map<String, List<String>> _yemenGovernorates = {
+    'تعز': [
+      'المظفر', 'القاهرة', 'صالح', 'التعيزية', 'الحوبان', 'المواساة',
+      'صبر الموادم', 'شرعب السلام', 'شرعب الرونة', 'المعافر', 'مقبنة',
+      'الوازعية', 'جبل حبشي', 'الأشرفية', 'المسراخ',
+    ],
+    'صنعاء': [
+      'الصبين', 'شعوب', 'معين', 'بني حرم', 'السبعين', 'الوحدة',
+      'صنعاء القديمة', 'أزال', 'الثورة', 'حي الصناعي', 'الحصبة', 'باب الشعب',
+    ],
+    'أمانة العاصمة': [
+      'معين', 'صنعاء القديمة', 'شعوب', 'السبعين', 'الصبين',
+      'الأمانة', 'التحرير', 'العروبة', 'الوحدة',
+    ],
+    'عدن': [
+      'كريتر', 'المعلا', 'التواهي', 'خور مكسر', 'الشيخ عثمان',
+      'دار سعد', 'المنصورة', 'البريقة',
+    ],
+    'الحديدة': [
+      'الحديدة', 'باجل', 'بيت الفقيه', 'زبيد', 'الحالي',
+      'المراوعة', 'اللحية', 'الخوخة', 'التحيتا', 'الدريهمي',
+    ],
+    'إب': [
+      'إب', 'يريم', 'جبلة', 'القفر', 'السياني', 'ذي السفال',
+      'المخادر', 'الشعر', 'حبيش', 'البدع',
+    ],
+    'ذمار': [
+      'ذمار', 'عتمة', 'عنس', 'الحداء', 'جهران',
+      'ميفعة عنس', 'الصدة', 'وصاب العالي', 'وصاب السافل',
+    ],
+    'الضالع': ['الضالع', 'قعطبة', 'جحاف', 'دمت', 'مكيراس', 'الحشاء', 'رصد'],
+    'البيضاء': [
+      'البيضاء', 'رداع', 'مريس', 'الزاهر', 'القريشية',
+      'العقل', 'ناطع', 'السوادية', 'نعمان',
+    ],
+    'مأرب': [
+      'مأرب', 'رغوان', 'مجزر', 'صرواح', 'جبل مراد',
+      'المدية', 'حريب', 'حريب القرامش',
+    ],
+    'حضرموت': [
+      'المكلا', 'الشحر', 'سيئون', 'تريم', 'عمد',
+      'رخية', 'السوم', 'الديس الشرقية', 'حوره',
+    ],
+    'حجة': [
+      'حجة', 'عبس', 'ميدي', 'مسور', 'شرس',
+      'كحلان عفار', 'الجماعة', 'مستبأ', 'أفلح الشام',
+    ],
+    'لحج': [
+      'الحوطة', 'يافع', 'القبيطة', 'المضاربة',
+      'طور الباحة', 'المسيمير', 'الحد', 'رصد', 'ردفان',
+    ],
+    'شبوة': [
+      'عتق', 'بيحان', 'حبان', 'عسيلان', 'نصاب', 'جردان', 'عين', 'الطلح',
+    ],
+    'المهرة': ['الغيضة', 'قشن', 'حوف', 'شحن', 'سرفيت', 'منبيح', 'المسيلة'],
+    'صعدة': [
+      'صعدة', 'ضحيان', 'حيدان', 'المضاف', 'باقم',
+      'مجز', 'شداء', 'الصفراء', 'قطابر',
+    ],
+    'الجوف': [
+      'الحزم', 'متون', 'المصلوب', 'الغيل', 'خب والشعف', 'المهاشمة',
+    ],
+  };
 
   @override
   void initState() {
@@ -49,9 +111,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             ? widget.user!.age.toString()
             : '');
 
-    _selectedGender = widget.user?.gender;
-    _selectedCity   = widget.user?.city;
-    _selectedArea   = widget.user?.area;
+    _selectedGender    = widget.user?.gender;
+    _selectedBloodType = widget.user?.bloodType;
+    _selectedCity      = widget.user?.city;
+    _selectedArea      = widget.user?.area;
   }
 
   @override
@@ -66,9 +129,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         _phoneController.text = streamUser.phone;
         _ageController.text   =
             streamUser.age > 0 ? streamUser.age.toString() : '';
-        _selectedGender = streamUser.gender;
-        _selectedCity   = streamUser.city;
-        _selectedArea   = streamUser.area;
+        _selectedGender    = streamUser.gender;
+        _selectedBloodType = streamUser.bloodType;
+        _selectedCity      = streamUser.city;
+        _selectedArea      = streamUser.area;
         _initialized = true;
       }
     }
@@ -87,12 +151,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final data = <String, dynamic>{
-      'name':   _nameController.text.trim(),
-      'phone':  _phoneController.text.trim(),
-      'age':    int.tryParse(_ageController.text.trim()) ?? 0,
-      'gender': _selectedGender ?? '',
-      'city':   _selectedCity   ?? '',
-      'area':   _selectedArea   ?? '',
+      'name':      _nameController.text.trim(),
+      'phone':     _phoneController.text.trim(),
+      'age':       int.tryParse(_ageController.text.trim()) ?? 0,
+      'gender':    _selectedGender    ?? '',
+      'bloodType': _selectedBloodType ?? '',
+      'city':      _selectedCity      ?? '',
+      'area':      _selectedArea      ?? '',
     };
 
     final success =
@@ -160,45 +225,24 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             children: [
               // ── Avatar ─────────────────────────────────────────────────
               Center(
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 100,
-                      height: 100,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                            color: Theme.of(context).primaryColor, width: 2),
-                      ),
-                      child: Icon(
-                        Icons.person,
-                        size: 50,
-                        color: Theme.of(context)
-                                .iconTheme
-                                .color
-                                ?.withValues(alpha: 0.5) ??
-                            Colors.grey,
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).primaryColor,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.camera_alt,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                          size: 16,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Container(
+                  width: 100,
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surface,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: Theme.of(context).primaryColor, width: 2),
+                  ),
+                  child: Icon(
+                    Icons.person,
+                    size: 50,
+                    color: Theme.of(context)
+                            .iconTheme
+                            .color
+                            ?.withValues(alpha: 0.5) ??
+                        Colors.grey,
+                  ),
                 ),
               ),
               const SizedBox(height: 32),
@@ -312,6 +356,31 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               ),
               const SizedBox(height: 16),
 
+              // ── فصيلة الدم ─────────────────────────────────────────────
+              Text(
+                'فصيلة الدم',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
+              const SizedBox(height: 8),
+              CustomDropdownField<String>(
+                hintText: 'اختر فصيلة الدم',
+                value: _selectedBloodType,
+                suffixIcon: Icons.bloodtype_outlined,
+                validator: (v) =>
+                    v == null ? 'يرجى اختيار فصيلة الدم' : null,
+                items: _bloodTypes
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (val) {
+                  if (val != null) setState(() => _selectedBloodType = val);
+                },
+              ),
+              const SizedBox(height: 16),
+
               // ── المحافظة ────────────────────────────────────────────────
               Text(
                 'المحافظة',
@@ -327,11 +396,17 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 value: _selectedCity,
                 validator: (v) =>
                     v == null ? 'يرجى اختيار المحافظة' : null,
-                items: _cities
+                items: _yemenGovernorates.keys
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
                 onChanged: (val) {
-                  if (val != null) setState(() => _selectedCity = val);
+                  if (val != null) {
+                    setState(() {
+                      _selectedCity = val;
+                      // إعادة تعيين المديرية عند تغيير المحافظة لتجنب قيمة خاطئة
+                      _selectedArea = null;
+                    });
+                  }
                 },
               ),
               const SizedBox(height: 16),
@@ -351,7 +426,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 value: _selectedArea,
                 validator: (v) =>
                     v == null ? 'يرجى اختيار المديرية' : null,
-                items: _areas
+                items: (_yemenGovernorates[_selectedCity] ?? [])
                     .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
                 onChanged: (val) {

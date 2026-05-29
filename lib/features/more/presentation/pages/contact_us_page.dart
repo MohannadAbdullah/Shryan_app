@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:sharyan/shared/widgets/custom_button.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,7 +12,7 @@ class ContactUsPage extends StatefulWidget {
 }
 
 class _ContactUsPageState extends State<ContactUsPage> {
-  final _formKey   = GlobalKey<FormState>();
+  final _formKey     = GlobalKey<FormState>();
   final _subjectCtrl = TextEditingController();
   final _messageCtrl = TextEditingController();
   bool _isSending = false;
@@ -36,7 +38,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      _showError('تعذّر فتح تطبيق البريد الإلكتروني');
+      _showSnack('تعذّر فتح تطبيق البريد الإلكتروني', isError: true);
     }
   }
 
@@ -46,45 +48,60 @@ class _ContactUsPageState extends State<ContactUsPage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri);
     } else {
-      _showError('تعذّر فتح تطبيق الهاتف');
+      _showSnack('تعذّر فتح تطبيق الهاتف', isError: true);
     }
   }
 
-  // ── إرسال النموذج عبر البريد ──────────────────────────────────────────────
+  // ── إرسال النموذج إلى Firestore ───────────────────────────────────────────
   Future<void> _sendForm() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isSending = true);
 
-    final uri = Uri(
-      scheme: 'mailto',
-      path: _email,
-      queryParameters: {
-        'subject': _subjectCtrl.text.trim(),
-        'body': _messageCtrl.text.trim(),
-      },
-    );
+    try {
+      final uid = FirebaseAuth.instance.currentUser?.uid ?? 'anonymous';
+      await FirebaseFirestore.instance.collection('contacts').add({
+        'uid':       uid,
+        'subject':   _subjectCtrl.text.trim(),
+        'message':   _messageCtrl.text.trim(),
+        'status':    'unread',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
 
-    final canOpen = await canLaunchUrl(uri);
-    if (!mounted) return;
-    setState(() => _isSending = false);
+      if (!mounted) return;
+      setState(() => _isSending = false);
 
-    if (canOpen) {
-      await launchUrl(uri);
-      // إعادة تعيين النموذج بعد الفتح
       _subjectCtrl.clear();
       _messageCtrl.clear();
-    } else {
-      _showError('تعذّر فتح تطبيق البريد الإلكتروني');
+      _formKey.currentState?.reset();
+
+      _showSnack('تم إرسال رسالتك بنجاح، سنتواصل معك قريباً ✓',
+          isError: false);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isSending = false);
+      _showSnack('حدث خطأ أثناء الإرسال، يرجى المحاولة لاحقاً',
+          isError: true);
     }
   }
 
-  void _showError(String msg) {
+  void _showSnack(String msg, {required bool isError}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(msg),
-      backgroundColor: Colors.red.shade700,
+      content: Row(children: [
+        Icon(
+          isError ? Icons.error_outline : Icons.check_circle,
+          color: Colors.white,
+          size: 20,
+        ),
+        const SizedBox(width: 10),
+        Expanded(child: Text(msg)),
+      ]),
+      backgroundColor:
+          isError ? Colors.red.shade700 : Colors.green.shade700,
       behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      shape:
+          RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      duration: const Duration(seconds: 4),
     ));
   }
 
@@ -207,6 +224,7 @@ class _ContactUsPageState extends State<ContactUsPage> {
                       controller: _messageCtrl,
                       maxLines: 4,
                       textInputAction: TextInputAction.newline,
+                      keyboardType: TextInputType.multiline,
                       decoration: InputDecoration(
                         hintText: 'اكتب تفاصيل رسالتك هنا...',
                         filled: true,

@@ -84,6 +84,29 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
                   builder: (_) => const _PasswordResetSheet(),
                 ),
               ),
+              _divider(),
+              ListTile(
+                leading: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+                title: const Text(
+                  'تسجيل الخروج',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.redAccent,
+                  ),
+                ),
+                trailing: const Icon(
+                  Icons.arrow_forward_ios,
+                  size: 14,
+                  color: Colors.redAccent,
+                ),
+                onTap: () async {
+                  final navigator = GoRouter.of(context);
+                  await ref.read(authProvider.notifier).signOut();
+                  if (!mounted) return;
+                  navigator.go('/login');
+                },
+              ),
             ]),
 
             const SizedBox(height: 32),

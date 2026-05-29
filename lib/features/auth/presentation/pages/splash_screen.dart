@@ -1,8 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:sharyan/core/constants/global_constants.dart';
 import 'package:sharyan/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -23,9 +25,21 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
       duration: const Duration(seconds: 2),
     )..repeat();
 
-    // Navigate to register page after 3 seconds for demo purposes
-    _timer = Timer(const Duration(seconds: 3), () {
-      if (mounted) {
+    // After the splash animation, determine the correct initial route.
+    _timer = Timer(const Duration(seconds: 3), () async {
+      if (!mounted) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      final hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+      final currentUser = FirebaseAuth.instance.currentUser;
+
+      if (!mounted) return;
+
+      if (currentUser != null) {
+        context.go('/home');
+      } else if (hasSeenOnboarding) {
+        context.go('/login');
+      } else {
         context.go('/onboarding');
       }
     });
