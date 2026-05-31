@@ -4,9 +4,11 @@
 class HospitalEntity {
   final String uid;
   final String email;
+  final String name;
 
   const HospitalEntity({
     required this.uid,
     required this.email,
+    required this.name,
   });
 }

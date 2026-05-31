@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sharyan/features/hospital/presentation/providers/hospital_auth_provider.dart';
 import 'package:sharyan/features/hospital/presentation/pages/responders_list_page.dart';
 import 'package:sharyan/core/theme/app_theme.dart';
 import 'package:sharyan/features/hospital/presentation/widgets/buildAppBar.dart';
@@ -26,14 +28,14 @@ const Map<String, List<String>> _kGovernorates = {
   'الجوف': ['الحزم', 'متون', 'المصلوب', 'الغيل', 'خب والشعف', 'المهاشمة'],
 };
 
-class CreateRequestPage extends StatefulWidget {
+class CreateRequestPage extends ConsumerStatefulWidget {
   const CreateRequestPage({super.key});
 
   @override
-  State<CreateRequestPage> createState() => _CreateRequestPageState();
+  ConsumerState<CreateRequestPage> createState() => _CreateRequestPageState();
 }
 
-class _CreateRequestPageState extends State<CreateRequestPage> {
+class _CreateRequestPageState extends ConsumerState<CreateRequestPage> {
    int currentIndex = 0; // Keeping Home active as per design
 
   String _selectedBloodType = 'O+';
@@ -54,9 +56,11 @@ class _CreateRequestPageState extends State<CreateRequestPage> {
   Future<void> _handleSubmit() async {
     setState(() => _isSubmitting = true);
 
+    final hospitalName = ref.read(hospitalAuthProvider).hospital?.name ?? 'مستشفى';
+
     final requestId = await EmergencyNotificationService().sendEmergencyBroadcast(
       bloodType: _selectedBloodType,
-      hospitalName: 'مستشفى الثورة',
+      hospitalName: hospitalName,
       city: _selectedCity,
       district: _selectedDistrict,
       quantity: _quantity,
@@ -448,6 +452,7 @@ class _CreateRequestPageState extends State<CreateRequestPage> {
                 child: DropdownButton<String>(
                   value: items.contains(value) ? value : null,
                   isExpanded: true,
+                  menuMaxHeight: 300,
                   underline: const SizedBox.shrink(),
                   hint: Text(
                     hint,

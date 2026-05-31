@@ -18,6 +18,7 @@ class UserModel extends UserEntity {
     required super.createdAt,
     super.donationsCount = 0,
     super.points = 0,
+    super.isAvailableToDonate = true,
   });
 
   /// تحويل من Firestore document إلى Model
@@ -47,6 +48,7 @@ class UserModel extends UserEntity {
           : DateTime.now(),
       donationsCount: (data['donationsCount'] as num?)?.toInt() ?? 0,
       points:         (data['points']         as num?)?.toInt() ?? 0,
+      isAvailableToDonate: data['isAvailableToDonate'] as bool? ?? true,
     );
   }
 
@@ -64,9 +66,9 @@ class UserModel extends UserEntity {
       'area': area,
       'lastDonationDate': lastDonationDate,
       'createdAt': Timestamp.fromDate(createdAt),
-      'isAvailableToDonate': true,   // ← يُضاف تلقائياً عند التسجيل
-      'donationsCount': 0,           // ← عداد التبرعات يبدأ من صفر
-      'points': 0,                   // ← النقاط تبدأ من صفر
+      'isAvailableToDonate': isAvailableToDonate,
+      'donationsCount': donationsCount,
+      'points': points,
     };
   }
 
@@ -86,6 +88,7 @@ class UserModel extends UserEntity {
       createdAt: entity.createdAt,
       donationsCount: entity.donationsCount,
       points: entity.points,
+      isAvailableToDonate: entity.isAvailableToDonate,
     );
   }
 }

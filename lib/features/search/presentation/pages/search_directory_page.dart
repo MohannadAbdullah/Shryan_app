@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sharyan/features/history/presentation/pages/donation_history_page.dart';
@@ -157,6 +157,84 @@ class _SearchDirectoryPageState extends State<SearchDirectoryPage> {
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  // ─── Direct Donation Confirmation ──────────────────────────────────────────
+  Future<void> _confirmDirectDonation(String donorUid, String donorName, String bloodType) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('تأكيد التبرع', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text('هل أنت متأكد أن المتبرع "$donorName" قام بالتبرع لك فعلياً؟\n\nتنويه: لا تقم بتأكيد التبرع إلا بعد إتمام عملية نقل الدم بنجاح لضمان مصداقية النظام.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء', style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryColor,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            child: const Text('نعم، أؤكد ذلك', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final db = FirebaseFirestore.instance;
+      final donorRef = db.collection('users').doc(donorUid);
+      final donationRef = donorRef.collection('donations').doc();
+
+      final batch = db.batch();
+
+      batch.update(donorRef, {
+        'isAvailableToDonate': false,
+        'lastDonationDate': FieldValue.serverTimestamp(),
+        'donationsCount': FieldValue.increment(1),
+        'points': FieldValue.increment(5),
+      });
+
+      batch.set(donationRef, {
+        'bloodType': bloodType,
+        'hospitalName': 'تبرع مباشر (مستشفى غير مسجل)',
+        'status': 'مكتمل',
+        'donatedAt': FieldValue.serverTimestamp(),
+      });
+
+      await batch.commit();
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('تم تأكيد التبرع بنجاح للمتبرع $donorName. شكراً لك!'),
+          backgroundColor: Colors.green.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+
+      // Refresh search results
+      _performSearch();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('حدث خطأ، يرجى المحاولة مرة أخرى'),
+          backgroundColor: Colors.red.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+      setState(() => _isLoading = false);
     }
   }
 
@@ -418,6 +496,7 @@ class _SearchDirectoryPageState extends State<SearchDirectoryPage> {
           child: DropdownButton<T>(
             value: value,
             isExpanded: true,
+            menuMaxHeight: 300,
             underline: const SizedBox.shrink(),
             icon: const Icon(Icons.keyboard_arrow_down_rounded,
                 color: Colors.grey),
@@ -595,6 +674,7 @@ class _SearchDirectoryPageState extends State<SearchDirectoryPage> {
     ColorScheme colorScheme,
   ) {
     // الحقول مطابقة لـ UserModel.toFirestore()
+    final String uid = donor['id'] as String? ?? '';
     final String name = donor['name'] as String? ?? 'متبرع';
     final String area = donor['area'] as String? ?? '';
     final String city = donor['city'] as String? ?? '';
@@ -619,105 +699,131 @@ class _SearchDirectoryPageState extends State<SearchDirectoryPage> {
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        leading: Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: AppTheme.primaryColor.withValues(alpha: 0.1),
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: AppTheme.primaryColor.withValues(alpha: 0.4),
-              width: 1.5,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              bloodType,
-              style: const TextStyle(
-                color: AppTheme.primaryColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-          ),
-        ),
-        title: Row(
-          children: [
-            Expanded(
-              child: Text(
-                name,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                  color: theme.textTheme.titleMedium?.color,
-                ),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            if (isAvailable) ...[
-              const SizedBox(width: 6),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'متاح',
-                  style: TextStyle(
-                    color: Colors.green,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
+      child: Column(
+        children: [
+          ListTile(
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            leading: Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.4),
+                  width: 1.5,
                 ),
               ),
-            ],
-          ],
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4),
-          child: Row(
-            children: [
-              Icon(
-                Icons.location_on_outlined,
-                size: 14,
-                color: theme.iconTheme.color?.withValues(alpha: 0.5),
-              ),
-              const SizedBox(width: 3),
-              Expanded(
+              child: Center(
                 child: Text(
-                  area.isNotEmpty && city.isNotEmpty
-                      ? '$area، $city'
-                      : area.isNotEmpty
-                          ? area
-                          : city,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: theme.textTheme.bodySmall?.color,
+                  bloodType,
+                  style: const TextStyle(
+                    color: AppTheme.primaryColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
-            ],
-          ),
-        ),
-        trailing: phone.isNotEmpty
-            ? IconButton(
-                tooltip: 'اتصال بالمتبرع',
-                style: IconButton.styleFrom(
-                  backgroundColor: AppTheme.primaryColor,
-                  shape: const CircleBorder(),
-                  padding: const EdgeInsets.all(10),
+            ),
+            title: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: theme.textTheme.titleMedium?.color,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
-                icon: const Icon(Icons.phone, color: Colors.white, size: 20),
-                onPressed: () => _callDonor(phone),
-              )
-            : Icon(Icons.phone_disabled,
-                color: theme.disabledColor, size: 22),
+                if (isAvailable) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'متاح',
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.location_on_outlined,
+                    size: 14,
+                    color: theme.iconTheme.color?.withValues(alpha: 0.5),
+                  ),
+                  const SizedBox(width: 3),
+                  Expanded(
+                    child: Text(
+                      area.isNotEmpty && city.isNotEmpty
+                          ? '$area، $city'
+                          : area.isNotEmpty
+                              ? area
+                              : city,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: theme.textTheme.bodySmall?.color,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            trailing: phone.isNotEmpty
+                ? IconButton(
+                    tooltip: 'اتصال بالمتبرع',
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppTheme.primaryColor,
+                      shape: const CircleBorder(),
+                      padding: const EdgeInsets.all(10),
+                    ),
+                    icon: const Icon(Icons.phone, color: Colors.white, size: 20),
+                    onPressed: () => _callDonor(phone),
+                  )
+                : Icon(Icons.phone_disabled,
+                    color: theme.disabledColor, size: 22),
+          ),
+          if (isAvailable && uid.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _confirmDirectDonation(uid, name, bloodType),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.green.shade700,
+                    side: BorderSide(color: Colors.green.shade700),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  icon: const Icon(Icons.verified_user_outlined, size: 18),
+                  label: const Text(
+                    'تأكيد استلام التبرع (تبرع مباشر)',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

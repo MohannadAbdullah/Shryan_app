@@ -70,6 +70,7 @@ class HospitalAuthRepositoryImpl implements HospitalAuthRepository {
     return HospitalEntity(
       uid: uid,
       email: (data['email'] as String? ?? '').trim(),
+      name: (data['name'] as String? ?? 'مستشفى').trim(),
     );
   }
 }

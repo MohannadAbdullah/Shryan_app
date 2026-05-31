@@ -6,8 +6,8 @@ import 'package:sharyan/shared/widgets/custom_button.dart';
 class InviteFriendPage extends StatelessWidget {
   const InviteFriendPage({super.key});
 
-  // ── رابط الدعوة الثابت (يمكن ربطه بـ UID لاحقاً) ─────────────────────────
-  static const _inviteLink = 'https://sharyan.app/invite';
+  // ── رابط الدعوة (رابط استضافة Firebase) ──────────────────────────────────
+  static const _inviteLink = 'https://sharyan-99352.web.app';
   static const _shareMessage =
       'انضم إلى تطبيق شريان 🩸 وكن سبباً في إنقاذ حياة!\n'
       'سجّل كمتبرع بالدم الآن:\n$_inviteLink';

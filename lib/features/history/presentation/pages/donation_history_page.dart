@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:sharyan/core/theme/app_theme.dart';
@@ -322,7 +322,8 @@ class _DonationHistoryPageState extends State<DonationHistoryPage> {
         'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
         'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
       ];
-      final hour = dt.hour > 12 ? dt.hour - 12 : dt.hour;
+      int hour = dt.hour % 12;
+      if (hour == 0) hour = 12;
       final period = dt.hour >= 12 ? 'مساءً' : 'صباحاً';
       dateText =
           '${dt.day} ${months[dt.month - 1]} ${dt.year} - $hour:${dt.minute.toString().padLeft(2, '0')} $period';

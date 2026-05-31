@@ -12,6 +12,7 @@ class UserEntity {
   final DateTime createdAt;
   final int donationsCount;
   final int points;
+  final bool isAvailableToDonate;
 
   const UserEntity({
     required this.uid,
@@ -27,5 +28,6 @@ class UserEntity {
     required this.createdAt,
     this.donationsCount = 0,
     this.points = 0,
+    this.isAvailableToDonate = true,
   });
 }

@@ -216,6 +216,14 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 }
 
+  // ── تحديث المستخدم الحالي ────────────────────────────────────────────────
+  Future<void> refreshUser() async {
+    final user = await _repo.getCurrentUser();
+    if (user != null) {
+      state = state.copyWith(currentUser: user);
+    }
+  }
+
   // ── تسجيل الخروج ─────────────────────────────────────────────────────────
   Future<void> signOut() async {
     await ref.read(authRepositoryProvider).signOut();

@@ -1,11 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sharyan/features/hospital/presentation/providers/hospital_auth_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:sharyan/core/constants/global_constants.dart';
 import 'package:sharyan/shared/widgets/custom_bottom_nav_bar.dart';
 import 'package:sharyan/core/theme/app_theme.dart';
 
-class RespondersListPage extends StatefulWidget {
+class RespondersListPage extends ConsumerStatefulWidget {
   /// معرّف الطلب — إذا مُرِّر، تُعرض المستجيبون لهذا الطلب تحديداً.
   /// إذا لم يُمرَّر، تُعرض القائمة العامة للمتبرعين المتاحين.
   final String? requestId;
@@ -13,11 +15,19 @@ class RespondersListPage extends StatefulWidget {
   const RespondersListPage({super.key, this.requestId});
 
   @override
-  State<RespondersListPage> createState() => _RespondersListPageState();
+  ConsumerState<RespondersListPage> createState() => _RespondersListPageState();
 }
 
-class _RespondersListPageState extends State<RespondersListPage> {
+class _RespondersListPageState extends ConsumerState<RespondersListPage> {
   int _currentIndex = 1;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   // ─── Stream: مستجيبو طلب محدد من emergencyRequests/{requestId}/responders ──
   Stream<QuerySnapshot<Map<String, dynamic>>> get _respondersStream {
@@ -56,9 +66,11 @@ class _RespondersListPageState extends State<RespondersListPage> {
         'points': FieldValue.increment(5), // +5 نقاط مكافأة على كل تبرع
       });
 
+      final hospitalName = ref.read(hospitalAuthProvider).hospital?.name ?? 'مستشفى';
+
       batch.set(donationRef, {
         'bloodType': bloodType,
-        'hospitalName': 'مستشفى الثورة',
+        'hospitalName': hospitalName,
         'status': 'مكتمل',
         'donatedAt': FieldValue.serverTimestamp(),
       });
@@ -164,7 +176,7 @@ class _RespondersListPageState extends State<RespondersListPage> {
           }
 
           // ترتيب client-side بالأحدث أولاً (بدون الحاجة لـ composite index)
-          final docs = [...(snapshot.data?.docs ?? [])]
+          var docs = [...(snapshot.data?.docs ?? [])]
             ..sort((a, b) {
               final aTime = a.data()['createdAt'] ?? a.data()['respondedAt'];
               final bTime = b.data()['createdAt'] ?? b.data()['respondedAt'];
@@ -172,8 +184,18 @@ class _RespondersListPageState extends State<RespondersListPage> {
               return (bTime as dynamic).compareTo(aTime);
             });
 
+          // فلترة نتائج البحث
+          if (_searchQuery.isNotEmpty) {
+            docs = docs.where((doc) {
+              final data = doc.data();
+              final name = (data['name'] as String? ?? '').toLowerCase();
+              final phone = (data['phone'] as String? ?? '').toLowerCase();
+              return name.contains(_searchQuery) || phone.contains(_searchQuery);
+            }).toList();
+          }
+
           // ── Empty ────────────────────────────────────────────────────────
-          if (docs.isEmpty) {
+          if ((snapshot.data?.docs ?? []).isEmpty) {
             return _buildEmptyState(context);
           }
 
@@ -181,10 +203,50 @@ class _RespondersListPageState extends State<RespondersListPage> {
           return Column(
             children: [
               // Header
-              _buildHeader(context, docs.length),
+              _buildHeader(context, snapshot.data?.docs.length ?? 0),
+              
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    hintText: 'ابحث بالاسم أو رقم الهاتف...',
+                    hintStyle: TextStyle(fontSize: 14, color: Theme.of(context).textTheme.bodySmall?.color),
+                    prefixIcon: Icon(Icons.search, color: AppTheme.primaryColor.withValues(alpha: 0.6)),
+                    filled: true,
+                    fillColor: Theme.of(context).dividerColor.withValues(alpha: 0.05),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppTheme.primaryColor.withValues(alpha: 0.5)),
+                    ),
+                  ),
+                  onChanged: (val) {
+                    setState(() {
+                      _searchQuery = val.trim().toLowerCase();
+                    });
+                  },
+                ),
+              ),
+
               // List
               Expanded(
-                child: ListView.separated(
+                child: docs.isEmpty
+                    ? Center(
+                        child: Text(
+                          'لا توجد نتائج مطابقة للبحث',
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodySmall?.color,
+                            fontSize: 14,
+                          ),
+                        ),
+                      )
+                    : ListView.separated(
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                   itemCount: docs.length,
                   separatorBuilder: (_, __) => const SizedBox(height: 16),

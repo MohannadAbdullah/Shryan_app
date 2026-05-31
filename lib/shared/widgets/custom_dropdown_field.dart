@@ -27,6 +27,7 @@ class CustomDropdownField<T> extends StatelessWidget {
     return DropdownButtonFormField<T>(
       // ValueKey يجبر إعادة بناء الـ widget عند تغيير القيمة من الخارج
       key: ValueKey(safeValue),
+      menuMaxHeight: 300,
       initialValue: safeValue,
       items: items,
       onChanged: onChanged,

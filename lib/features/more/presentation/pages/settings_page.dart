@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:provider/provider.dart' as p;
 import 'package:sharyan/core/theme/theme_provider.dart';
 import 'package:sharyan/features/auth/presentation/providers/auth_provider.dart';
@@ -22,6 +23,7 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = p.Provider.of<ThemeProvider>(context);
+    final user = ref.watch(authProvider).currentUser;
     String themeText = 'إعدادات النظام';
     if (themeProvider.themeMode == ThemeMode.light) themeText = 'فاتح';
     if (themeProvider.themeMode == ThemeMode.dark) themeText = 'داكن';
@@ -42,6 +44,80 @@ class _SettingsPageState extends ConsumerState<SettingsPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (user != null) ...[
+              // ── حالة التبرع ────────────────────────────────────────────────
+              _sectionTitle('حالة التبرع'),
+              const SizedBox(height: 16),
+              _card([
+                SwitchListTile(
+                  title: const Text('متاح للتبرع',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                    user.isAvailableToDonate
+                        ? 'أنت تظهر الآن في نتائج البحث كمتبرع متاح.'
+                        : 'أنت مخفي حالياً من نتائج البحث.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: user.isAvailableToDonate ? Colors.green : Colors.grey,
+                    ),
+                  ),
+                  secondary: Icon(Icons.volunteer_activism,
+                      color: user.isAvailableToDonate ? Colors.green : Colors.grey),
+                  value: user.isAvailableToDonate,
+                  activeTrackColor: Colors.green.withValues(alpha: 0.4),
+                  activeColor: Colors.green,
+                  onChanged: (newValue) async {
+                    if (newValue == true && user.lastDonationDate != null && user.lastDonationDate!.isNotEmpty) {
+                      try {
+                        final lastDonation = DateTime.parse(user.lastDonationDate!);
+                        final difference = DateTime.now().difference(lastDonation).inDays;
+                        if (difference < 90) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('يجب مرور 3 أشهر من تاريخ آخر تبرع. (مضى $difference يوماً فقط)'),
+                              backgroundColor: Colors.red.shade700,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          return;
+                        }
+                      } catch (_) {}
+                    }
+
+                    try {
+                      await FirebaseFirestore.instance
+                          .collection('users')
+                          .doc(user.uid)
+                          .update({'isAvailableToDonate': newValue});
+                      ref.read(authProvider.notifier).refreshUser();
+                      
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(newValue ? 'تم تفعيل التبرع بنجاح' : 'تم إيقاف التبرع بنجاح'),
+                            backgroundColor: newValue ? Colors.green.shade700 : Colors.grey.shade700,
+                            behavior: SnackBarBehavior.floating,
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('حدث خطأ أثناء التحديث.'),
+                            backgroundColor: Colors.red.shade700,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                ),
+              ]),
+              const SizedBox(height: 32),
+            ],
+
             // ── تفضيلات التطبيق ────────────────────────────────────────────
             _sectionTitle('تفضيلات التطبيق'),
             const SizedBox(height: 16),

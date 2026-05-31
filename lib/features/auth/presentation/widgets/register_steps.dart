@@ -586,6 +586,7 @@ class _RegisterStepThreeState extends State<RegisterStepThree> {
                 child: DropdownButton<String>(
                   value: items.contains(value) ? value : null,
                   isExpanded: true,
+                  menuMaxHeight: 300,
                   underline: const SizedBox.shrink(),
                   icon: const Icon(Icons.keyboard_arrow_down_rounded,
                       color: Colors.grey),

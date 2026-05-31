@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:sharyan/features/history/presentation/pages/donation_history_page.dart';
+import 'package:sharyan/features/home/presentation/pages/home_page.dart';
 import 'package:sharyan/core/theme/app_theme.dart';
 import 'package:sharyan/shared/widgets/custom_bottom_nav_bar.dart';
 import 'package:sharyan/shared/widgets/custom_app_bar.dart';
@@ -16,18 +17,29 @@ class TopDonorsPage extends StatefulWidget {
 class _TopDonorsPageState extends State<TopDonorsPage> {
   int currentIndex = 0;
 
-  // ─── Firestore: جلب المتبرعين مرتبين حسب النقاط تنازلياً ────────────────
   final Stream<List<Map<String, dynamic>>> _topDonorsStream =
       FirebaseFirestore.instance
           .collection('users')
-          .orderBy('points', descending: true)
-          .limit(10)
           .snapshots()
-          .map((snap) => snap.docs.map((doc) {
-                final data = Map<String, dynamic>.from(doc.data());
-                data['uid'] = doc.id;
-                return data;
-              }).toList());
+          .map((snap) {
+            final docs = snap.docs.map((doc) {
+              final data = Map<String, dynamic>.from(doc.data());
+              data['uid'] = doc.id;
+              // في حال كان المتبرع القديم لا يملك حقل النقاط، نعتبره 0
+              data['points'] = data['points'] ?? 0;
+              return data;
+            }).toList();
+            
+            // ترتيب المتبرعين محلياً تنازلياً حسب النقاط
+            docs.sort((a, b) {
+              final pA = (a['points'] as num).toInt();
+              final pB = (b['points'] as num).toInt();
+              return pB.compareTo(pA);
+            });
+            
+            // أخذ أفضل 10 متبرعين فقط
+            return docs.take(10).toList();
+          });
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +47,7 @@ class _TopDonorsPageState extends State<TopDonorsPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: CustomAppBar(
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        title: "ابرز المتبرعون",
+        title: "أبرز المتبرعين",
         leading: Builder(
           builder: (context) => IconButton(
             icon:
@@ -175,11 +187,14 @@ class _TopDonorsPageState extends State<TopDonorsPage> {
         context: context,
         currentIndex: currentIndex,
         onTap: (index) {
-          if (index == 2) {
-            Navigator.push(context,
+          if (index == 0) {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (_) => const HomePage()));
+          } else if (index == 2) {
+            Navigator.pushReplacement(context,
                 MaterialPageRoute(builder: (_) => const ProfilePage()));
           } else if (index == 1) {
-            Navigator.push(context,
+            Navigator.pushReplacement(context,
                 MaterialPageRoute(builder: (_) => const DonationHistoryPage()));
           } else {
             setState(() => currentIndex = index);
@@ -194,7 +209,10 @@ class _TopDonorsPageState extends State<TopDonorsPage> {
     final name = data['name'] as String? ?? 'متبرع';
     final bloodType = data['bloodType'] as String? ?? '—';
     final city = data['city'] as String? ?? '';
-    final lastDonation = data['lastDonationDate'] as String?;
+    final lastDonationRaw = data['lastDonationDate'];
+    final lastDonation = lastDonationRaw is Timestamp
+        ? lastDonationRaw.toDate().toIso8601String()
+        : lastDonationRaw?.toString();
 
     return Container(
       padding: const EdgeInsets.all(24.0),
@@ -499,7 +517,10 @@ class _TopDonorsPageState extends State<TopDonorsPage> {
     final name = data['name'] as String? ?? 'متبرع';
     final bloodType = data['bloodType'] as String? ?? '—';
     final city = data['city'] as String? ?? '';
-    final lastDonation = data['lastDonationDate'] as String?;
+    final lastDonationRaw = data['lastDonationDate'];
+    final lastDonation = lastDonationRaw is Timestamp
+        ? lastDonationRaw.toDate().toIso8601String()
+        : lastDonationRaw?.toString();
 
     return Container(
       padding: const EdgeInsets.all(12),
